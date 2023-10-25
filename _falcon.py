@@ -18,12 +18,22 @@ class Connection:
     async def process_startup(self, scope, event):
         await database.connect()
 
-class Index:
+class First:
     async def on_get(self, req, resp):
         user = await User.objects.first()
 
-        resp.media = user.__dict__
+        resp.media = {
+            'name': user.name
+        }
+
+class All:
+    async def on_get(self, req, resp):
+        users = await User.objects.limit(5).all()
+
+        media = [{'name': i.name} for i in users]
+        resp.media = media
 
 app = falcon.asgi.App(middleware=[Connection()])
 
-app.add_route('/', Index())
+app.add_route('/', First())
+app.add_route('/users', All())
